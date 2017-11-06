@@ -2,12 +2,14 @@ import pygame
 import pygame.camera
 from pygame.locals import *
 from datetime import datetime
+# from BluetoothCom import *
 
 DEVICE = '/dev/video0'
 SIZE = (640, 480)
-FILENAME = 'capture.png'
 FOLDER = 'img/'
 
+serverMACAddress = ''
+# bluetoothServer = BluetoothComm(serverMACAddress)
 
 def camstream():
 
