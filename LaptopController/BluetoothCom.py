@@ -4,9 +4,10 @@ import bluetooth
 
 class BluetoothComm(object):
     
-    def __init__(self, serverMACAddress):
+    def __init__(self, serverMACAddress, debug):
         self.serverMACAddress = serverMACAddress
-        self.port = 3
+        self.port = 1
+        self.debug = debug
         print("Starting connection")
         self.s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self.s.connect((serverMACAddress, self.port))
@@ -14,15 +15,16 @@ class BluetoothComm(object):
         
     def send(self, msg):
         self.s.send(msg)
+        if self.debug:
+            print (msg)
         return True
         
     def close(self):
         self.s.close()
         return True
 
-
 # FOR TESTING
 if(__name__ == '__main__'):
-    obj = BluetoothComm('E4:46:DA:B1:84:AC')
-    obj.send("asd")
+    obj = BluetoothComm('00:15:83:35:99:09')
+    obj.send("a180  ")
     obj.close()

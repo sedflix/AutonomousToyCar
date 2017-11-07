@@ -1,12 +1,15 @@
 #include <SoftwareSerial.h>// import the serial library
 
+
+
+
 #include <Servo.h>
 
 Servo servo;
 int  servoPin = 9;
 int motorPin1 = 6;
-int motorPin2 = 7;
-int motorPinEN = 12;
+int motorPin2 = 5;
+int motorPinEN = 10;
 String str = "";
 char mode;
 
@@ -19,6 +22,7 @@ void setup() {
 //  Genotronex.begin(9600);
   Serial.begin(9600);
   servo.attach(servoPin);
+  brake();
 
 
 }
@@ -97,17 +101,20 @@ void loop() {
 }
 
 void forward() {
+  digitalWrite(motorPinEN, HIGH);
   digitalWrite(motorPin1, LOW) ;
   digitalWrite(motorPin2, HIGH) ;
 }
 
 void backward() {
+  digitalWrite(motorPinEN, HIGH);
   digitalWrite(motorPin1, HIGH) ;
   digitalWrite(motorPin2, LOW) ;
 }
 
 void brake() {
-  digitalWrite(motorPin1, LOW) ;
-  digitalWrite(motorPin2, LOW) ;
+  digitalWrite(motorPinEN, LOW);
+  digitalWrite(motorPin1, HIGH) ;
+  digitalWrite(motorPin2, HIGH) ;
 }
 
