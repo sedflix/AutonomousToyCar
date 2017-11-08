@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 def preprocess(img):
     rows, cols, _ = img.shape
     M = cv2.getRotationMatrix2D((cols / 2, rows / 2), -90, 1.4)
-    dst = cv2.warpAffine(img, M, (cols, rows), cv2.INTER_AREA)
+    dst = cv2.warpAffine(img, M, (cols, rows), flags=cv2.INTER_AREA)
     crop_img = dst[59:-1, :]
     x = cv2.resize(crop_img, (128, 84))
     return x
