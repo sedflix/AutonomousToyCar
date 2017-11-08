@@ -33,13 +33,14 @@ void loop() {
 
     if (x == 'a') {
 
-      Serial.println("in a");
+//      Serial.println("in a");
 
 
 
       str = "";
       int i  = 0;
       int j = 0;
+      
       while (true) {
         if (Serial.available())
         {
@@ -53,7 +54,7 @@ void loop() {
       }
 
       int angle  = (atoi(str.c_str()));
-      Serial.println(angle);
+//      Serial.println(angle);
 
 
       if (angle >= 0 && angle <= 180) {
@@ -67,7 +68,7 @@ void loop() {
     }
     else if (x == 's') {
 
-      Serial.println("in s");
+//      Serial.println("in s");
 
       while (true) {
         if (Serial.available()) {
@@ -76,21 +77,20 @@ void loop() {
         }
       }
 
-      Serial.println(mode);
+//      Serial.println(mode);
 
       if (mode == '1')
       {
-        Serial.println("forward");
+//        Serial.println("forward");
         forward();
       }
       else if (mode == '2')
       {
-        Serial.println("backward");
+//        Serial.println("backward");
         backward();
       }
       else if (mode == '3')
       {
-        Serial.println("stop");
         brake();
       }
 

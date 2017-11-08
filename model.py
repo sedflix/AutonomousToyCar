@@ -146,3 +146,7 @@ for x in glob.glob('LaptopController/GroundFloor?/*'):
 
 
 model.fit_generator(generate_train_from_PD_batch(finalset,128),samples_per_epoch=1200, epochs=20, verbose=1)
+
+model_json = './model.json'
+model_h5 = './model.h5'
+model.save(model_json, model_h5)
