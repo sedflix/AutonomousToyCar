@@ -5,14 +5,14 @@ from datetime import datetime
 
 from BluetoothCom import BluetoothComm
 
+# Steering angle must be from -180 to 180
+# to small current anle
 DEVICE = '/dev/video0'
 SIZE = (640, 480)
-FOLDER = 'img/'
-
+FOLDER = 'GroundFloor6/'
 
 serverMACAddress = '00:15:83:35:99:09'
-
-bluetoothServer = BluetoothComm(serverMACAddress, True)
+bluetoothServer = BluetoothComm(serverMACAddress, False)
 
 
 def camstream():
@@ -41,24 +41,30 @@ def camstream():
     x = 0
     y = 0
     while capture:
-        # screen = camera.get_image(screen)
-        # display.blit(screen, (0, 0))
+        screen = camera.get_image(screen)
+        display.blit(screen, (0, 0))
         pygame.display.flip()
         for event in pygame.event.get():
 
             lf = -joystick.get_axis(0)
-            leftright = int(translate(lf,-1,1,20,160))
-            updown = -(round(joystick.get_axis(1), 3))
+            leftright = int(translate(lf, -1, 1, 0, 180))
 
             angleInfo = 'a' + formatAngle(leftright)
-            speedInfo = 's' + formatSpeed(updown)
+            # speedInfo = 's' + formatSpeed(updown)
 
-            # saveImage(screen, lf, recording)
+            a = joystick.get_button(0)
+            b = joystick.get_button(2)
+            x = ''
+            if (a == 1):
+                x = 's1'
+            elif (b == 1):
+                x = 's2'
+            else:
+                x = 's3'
+
+            saveImage(screen, lf, x, recording)
             bluetoothServer.send(angleInfo)
-            if (not updown == 0):
-                bluetoothServer.send(speedInfo)
-
-
+            bluetoothServer.send(x)
 
             if event.type == QUIT:
                 capture = False
@@ -72,7 +78,6 @@ def camstream():
             # i:6 -> L2
             # i:7 -> R2
             if event.type == pygame.JOYBUTTONDOWN:
-
                 if joystick.get_button(5) == 1:
                     # R1
                     recording = True
@@ -87,19 +92,18 @@ def camstream():
                     # L1 or L2
                     recording = False
                     bluetoothServer.send("s3")
-                    print ("Stoping")
-                    print("recording status : " + str(recording))
+                    print ("Stoping car and recording")
 
-            clock.tick(60)
+            clock.tick(120)
 
     camera.stop()
     pygame.quit()
     return
 
 
-def saveImage(img, event_angle, recording):
+def saveImage(img, event_angle, updown, recording):
     if (recording):
-        pygame.image.save(img, FOLDER + str(datetime.now()) + "--" + str(event_angle) + ".jpg")
+        pygame.image.save(img, FOLDER + str(datetime.now()) + "--" + str(event_angle) + "--" + str(updown) + ".jpg")
 
 
 def formatAngle(x):

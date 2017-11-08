@@ -17,6 +17,7 @@ class BluetoothComm(object):
         self.s.send(msg)
         if self.debug:
             print (msg)
+            pass
         return True
         
     def close(self):
@@ -25,6 +26,6 @@ class BluetoothComm(object):
 
 # FOR TESTING
 if(__name__ == '__main__'):
-    obj = BluetoothComm('00:15:83:35:99:09')
-    obj.send("a180  ")
+    obj = BluetoothComm('00:15:83:35:99:09', True)
+    obj.send("a180")
     obj.close()
