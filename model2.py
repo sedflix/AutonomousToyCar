@@ -14,8 +14,8 @@ def preprocess(img):
     rows, cols, _ = img.shape
     M = cv2.getRotationMatrix2D((cols / 2, rows / 2), -90, 1.4)
     dst = cv2.warpAffine(img, M, (cols, rows), flags=cv2.INTER_AREA)
-    crop_img = dst[59:-1, :]
-    x = cv2.resize(crop_img, (128, 84))
+    crop_img = dst[109:-1, :]
+    x = cv2.resize(crop_img, (32, 16))
     return x
 
 
@@ -28,29 +28,6 @@ def augment_brightness_camera_images(image):
     image1 = np.array(image1, dtype=np.uint8)
     image1 = cv2.cvtColor(image1, cv2.COLOR_HSV2RGB)
     return image1
-
-
-def add_random_shadow(image):
-    top_y = 128 * np.random.uniform()
-    top_x = 0
-    bot_x = 84
-    bot_y = 128 * np.random.uniform()
-    image_hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-    shadow_mask = 0 * image_hls[:, :, 1]
-    X_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][0]
-    Y_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][1]
-    shadow_mask[((X_m - top_x) * (bot_y - top_y) - (bot_x - top_x) * (Y_m - top_y) >= 0)] = 1
-    # random_bright = .25+.7*np.random.uniform()
-    if np.random.randint(2) == 1:
-        random_bright = .5
-        cond1 = shadow_mask == 1
-        cond0 = shadow_mask == 0
-        if np.random.randint(2) == 1:
-            image_hls[:, :, 1][cond1] = image_hls[:, :, 1][cond1] * random_bright
-        else:
-            image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0] * random_bright
-    image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2RGB)
-    return image
 
 
 def preprocess_image_file_train(line_data):
@@ -74,7 +51,7 @@ def preprocess_image_file_train(line_data):
 
 
 def generate_train_from_PD_batch(data, batch_size=32):
-    batch_images = np.zeros((batch_size, 84, 128, 3))
+    batch_images = np.zeros((batch_size, 16, 32, 3))
     batch_steering = np.zeros(batch_size)
     while 1:
         a = 0
@@ -85,7 +62,7 @@ def generate_train_from_PD_batch(data, batch_size=32):
             x, y = preprocess_image_file_train(line_data)
 
             if (not (y < -0.1 or y > 0.1)):
-                if np.random.random_sample() < 0.7:
+                if np.random.random_sample() < 0.6:
                     continue
                 else:
                     a = a + 1
@@ -111,29 +88,26 @@ def generate_train_from_PD_batch(data, batch_size=32):
         #             plt.imshow()
         yield batch_images, batch_steering
 
+
+
+
 model = models.Sequential()
-model.add(convolutional.Convolution2D(16, 3, 3, input_shape=(84, 128, 3), activation='relu'))
+model.add(convolutional.Convolution2D(8, 3, 3, input_shape=(16, 32, 3), activation='relu'))
 model.add(pooling.MaxPooling2D(pool_size=(2, 2)))
-model.add(convolutional.Convolution2D(16, 3, 3, activation='relu'))
+model.add(convolutional.Convolution2D(8, 3, 3, activation='relu'))
 model.add(pooling.MaxPooling2D(pool_size=(2, 2)))
-model.add(convolutional.Convolution2D(32, 3, 3, activation='relu'))
-model.add(pooling.MaxPooling2D(pool_size=(4, 4)))
-model.add(Dropout(0.5))
-model.add(core.Flatten())
-model.add(core.Dense(500, activation='relu'))
 model.add(core.Dropout(.5))
-model.add(core.Dense(100, activation='relu'))
-model.add(core.Dropout(.25))
-model.add(core.Dense(20, activation='relu'))
+model.add(core.Flatten())
+model.add(core.Dense(50, activation='relu'))
 model.add(core.Dense(1))
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 model.compile(loss='mean_squared_error', optimizer='adam')
 
-
+model.summary()
 
 finalset = []
-new_size_row = 128
-new_size_col = 84
+new_size_row = 32
+new_size_col = 16
 
 for x in glob.glob('LaptopController/GroundFloor?/*'):
     jpg_index = x.find('.jpg')
@@ -145,8 +119,8 @@ for x in glob.glob('LaptopController/GroundFloor?/*'):
         finalset.append(x)
 
 
-model.fit_generator(generate_train_from_PD_batch(finalset,128),samples_per_epoch=1200, epochs=2, verbose=1)
+model.fit_generator(generate_train_from_PD_batch(finalset,64),samples_per_epoch=1200, verbose=1)
 
-model_json = './model.json'
-model_h5 = './model.h5'
+model_json = './model_small.json'
+model_h5 = './model_small.h5'
 model.save(model_json, model_h5)

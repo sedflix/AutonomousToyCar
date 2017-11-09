@@ -7,6 +7,8 @@ from BluetoothCom import BluetoothComm
 
 # Steering angle must be from -180 to 180
 # to small current anle
+# capsule net
+# fine tuning
 DEVICE = '/dev/video0'
 SIZE = (640, 480)
 FOLDER = 'GroundFloor6/'
