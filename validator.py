@@ -14,8 +14,8 @@ def preprocess(img):
     rows, cols, _ = img.shape
     M = cv2.getRotationMatrix2D((cols / 2, rows / 2), -90, 1.4)
     dst = cv2.warpAffine(img, M, (cols, rows), flags=cv2.INTER_AREA)
-    crop_img = dst[109:-1, :]
-    x = cv2.resize(crop_img, (32, 16))
+    crop_img = dst[59:-1, :]
+    x = cv2.resize(crop_img, (128, 84))
     return x
 
 
@@ -28,6 +28,29 @@ def augment_brightness_camera_images(image):
     image1 = np.array(image1, dtype=np.uint8)
     image1 = cv2.cvtColor(image1, cv2.COLOR_HSV2RGB)
     return image1
+
+
+def add_random_shadow(image):
+    top_y = 128 * np.random.uniform()
+    top_x = 0
+    bot_x = 84
+    bot_y = 128 * np.random.uniform()
+    image_hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    shadow_mask = 0 * image_hls[:, :, 1]
+    X_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][0]
+    Y_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][1]
+    shadow_mask[((X_m - top_x) * (bot_y - top_y) - (bot_x - top_x) * (Y_m - top_y) >= 0)] = 1
+    # random_bright = .25+.7*np.random.uniform()
+    if np.random.randint(2) == 1:
+        random_bright = .5
+        cond1 = shadow_mask == 1
+        cond0 = shadow_mask == 0
+        if np.random.randint(2) == 1:
+            image_hls[:, :, 1][cond1] = image_hls[:, :, 1][cond1] * random_bright
+        else:
+            image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0] * random_bright
+    image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2RGB)
+    return image
 
 
 def preprocess_image_file_train(line_data):
@@ -51,7 +74,7 @@ def preprocess_image_file_train(line_data):
 
 
 def generate_train_from_PD_batch(data, batch_size=32):
-    batch_images = np.zeros((batch_size, 16, 32, 3))
+    batch_images = np.zeros((batch_size, 84, 128, 3))
     batch_steering = np.zeros(batch_size)
     while 1:
         a = 0
@@ -62,7 +85,7 @@ def generate_train_from_PD_batch(data, batch_size=32):
             x, y = preprocess_image_file_train(line_data)
 
             if (not (y < -0.1 or y > 0.1)):
-                if np.random.random_sample() < 0.6:
+                if np.random.random_sample() < 0.7:
                     continue
                 else:
                     a = a + 1
@@ -88,11 +111,9 @@ def generate_train_from_PD_batch(data, batch_size=32):
         #             plt.imshow()
         yield batch_images, batch_steering
 
-
-
 finalset = []
-new_size_row = 32
-new_size_col = 16
+new_size_row = 128
+new_size_col = 84
 
 for x in glob.glob('LaptopController/GroundFloor?/*'):
     jpg_index = x.find('.jpg')
@@ -105,5 +126,5 @@ for x in glob.glob('LaptopController/GroundFloor?/*'):
 
 
 from keras.models import load_model
-model = load_model('model_small.json')
-model.evaluate_generator(generate_train_from_PD_batch(finalset,128), 10, max_queue_size=10, workers=1, use_multiprocessing=False)
+model = load_model('model.json')
+print (model.evaluate_generator(generate_train_from_PD_batch(finalset,28), 10, max_queue_size=10, workers=1, use_multiprocessing=False))

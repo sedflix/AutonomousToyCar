@@ -140,7 +140,7 @@ for x in glob.glob('LaptopController/GroundFloor?/*'):
     first_index = x.find('--')+3
     last_index = x.find('--',first_index) + 2
     speed = x[last_index:jpg_index]
-    if speed == 's1':
+    if speed == 's1':   
         angle = x[first_index:last_index-2]
         finalset.append(x)
 

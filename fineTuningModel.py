@@ -2,12 +2,14 @@
 
 from keras.models import Sequential
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
+from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, \
+    merge, Reshape, Activation
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras import backend as K
 
 from sklearn.metrics import log_loss
+
 
 def conv2d_bn(x, nb_filter, nb_row, nb_col,
               border_mode='same', subsample=(1, 1),
@@ -29,6 +31,7 @@ def conv2d_bn(x, nb_filter, nb_row, nb_col,
                       name=conv_name)(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name)(x)
     return x
+
 
 def inception_v3_model(img_rows, img_cols, channel=1, num_classes=None):
     """
@@ -201,7 +204,7 @@ def inception_v3_model(img_rows, img_cols, channel=1, num_classes=None):
     x_newfc = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(x)
     x_newfc = Flatten(name='flatten')(x_newfc)
     # x_newfc = Dense(num_classes, activation='softmax', name='predictions')(x_newfc)
-    x_newfc = Dense(1,activation='sigmoid',name='predictions')(x_newfc)
+    x_newfc = Dense(1, activation='sigmoid', name='predictions')(x_newfc)
 
     # Create another model with our customized softmax
     model = Model(img_input, x_newfc)
@@ -211,6 +214,7 @@ def inception_v3_model(img_rows, img_cols, channel=1, num_classes=None):
     # model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model
+
 
 import keras
 import cv2
@@ -229,8 +233,8 @@ def preprocess(img):
     M = cv2.getRotationMatrix2D((cols / 2, rows / 2), -90, 1.4)
     dst = cv2.warpAffine(img, M, (cols, rows), flags=cv2.INTER_AREA)
     crop_img = dst[59:-1, :]
-    x = cv2.resize(crop_img, (320, 160))
-    return x
+    x = cv2.resize(crop_img, (299, 299))
+    return
 
 
 def augment_brightness_camera_images(image):
@@ -265,7 +269,7 @@ def preprocess_image_file_train(line_data):
 
 
 def generate_train_from_PD_batch(data, batch_size=32):
-    batch_images = np.zeros((batch_size, 160, 320, 3))
+    batch_images = np.zeros((batch_size, 299, 299, 3))
     batch_steering = np.zeros(batch_size)
     while 1:
         a = 0
@@ -305,24 +309,23 @@ def generate_train_from_PD_batch(data, batch_size=32):
 
 finalset = []
 new_size_row = 320
-new_size_col = 160
+new_size_col = 320
 
-model = inception_v3_model(new_size_col,new_size_row,3)
+model = inception_v3_model(new_size_col, new_size_row, channel=3)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 model.compile(loss='mean_squared_error', optimizer='adam')
 model.summary()
 
 for x in glob.glob('LaptopController/GroundFloor?/*'):
     jpg_index = x.find('.jpg')
-    first_index = x.find('--')+3
-    last_index = x.find('--',first_index) + 2
+    first_index = x.find('--') + 3
+    last_index = x.find('--', first_index) + 2
     speed = x[last_index:jpg_index]
     if speed == 's1':
-        angle = x[first_index:last_index-2]
+        angle = x[first_index:last_index - 2]
         finalset.append(x)
 
-
-model.fit_generator(generate_train_from_PD_batch(finalset,64),samples_per_epoch=1200, verbose=1)
+model.fit_generator(generate_train_from_PD_batch(finalset, 64), samples_per_epoch=1200, verbose=1)
 
 model_json = './model_small.json'
 model_h5 = './model_small.h5'

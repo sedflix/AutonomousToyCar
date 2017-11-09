@@ -43,8 +43,8 @@ def camstream():
     x = 0
     y = 0
     while capture:
-        screen = camera.get_image(screen)
-        display.blit(screen, (0, 0))
+        # screen = camera.get_image(screen)
+        # display.blit(screen, (0, 0))
         pygame.display.flip()
         for event in pygame.event.get():
 
