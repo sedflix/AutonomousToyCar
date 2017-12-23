@@ -6,14 +6,19 @@ from datetime import datetime
 from BluetoothCom import BluetoothComm
 
 # Steering angle must be from -180 to 180
-# to small current anle
-# capsule net
-# fine tuning
+
+# used DroidCam to use phone camera for video streaming to the laptop
 DEVICE = '/dev/video0'
 SIZE = (640, 480)
+
+
+# folder where images will be saved
 FOLDER = 'GroundFloor6/'
 
-serverMACAddress = '00:15:83:35:99:09'
+# You have to pair and authenticate the device before this.
+# rfcomm would be helpful
+serverMACAddress = '00:15:83:35:99:09' # Mac Address of HC-05 (The Bluetooth)
+
 bluetoothServer = BluetoothComm(serverMACAddress, False)
 
 
@@ -43,9 +48,12 @@ def camstream():
     x = 0
     y = 0
     while capture:
-        # screen = camera.get_image(screen)
-        # display.blit(screen, (0, 0))
+
+        screen = camera.get_image(screen)
+        display.blit(screen, (0, 0))
         pygame.display.flip()
+
+
         for event in pygame.event.get():
 
             lf = -joystick.get_axis(0)
@@ -71,14 +79,18 @@ def camstream():
             if event.type == QUIT:
                 capture = False
 
-            # i:0 -> 1
-            # i:1 -> 2
-            # i:2 -> 3
-            # i:3 -> 4
-            # i:4 -> L1
-            # i:5 -> R1
-            # i:6 -> L2
-            # i:7 -> R2
+            """
+                joystick.get_button(i)
+                
+                i:0 -> 1
+                i:1 -> 2
+                i:2 -> 3
+                i:3 -> 4
+                i:4 -> L1
+                i:5 -> R1
+                i:6 -> L2
+                i:7 -> R2   
+            """
             if event.type == pygame.JOYBUTTONDOWN:
                 if joystick.get_button(5) == 1:
                     # R1
@@ -96,13 +108,16 @@ def camstream():
                     bluetoothServer.send("s3")
                     print ("Stoping car and recording")
 
-            clock.tick(120)
+            clock.tick(60)
 
     camera.stop()
     pygame.quit()
     return
 
 
+"""
+    TODO: Create a tread to save image so that it doesn't interfere with normal code execution
+"""
 def saveImage(img, event_angle, updown, recording):
     if (recording):
         pygame.image.save(img, FOLDER + str(datetime.now()) + "--" + str(event_angle) + "--" + str(updown) + ".jpg")
