@@ -1,6 +1,11 @@
 # AutonomousToyCar
 Self-Driving Toy Car using End-To-End Learning Model
 
+What does it do?
+it collects data about the surrounding environment, then discards it and drives into walls
+(To be clear, I'm just kidding)
+
+
 ## Car and Data Collection
 
 **Actively looking for a proper RC car** 
